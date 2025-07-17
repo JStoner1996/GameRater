@@ -11,3 +11,5 @@ export interface Game {
   stars: number;
   yearCompleted: number;
 }
+
+export type GameList = Game[];
