@@ -56,7 +56,7 @@ const GamesTable: React.FC = () => {
 
   return (
     <>
-      <AddGame onAddGame={handleAddGame} />
+      <AddGame onAddGame={handleAddGame} gameList={games} />
       <TableContainer
         component={Paper}
         sx={{ maxHeight: "75vh", overflowY: "auto" }}
