@@ -1,5 +1,5 @@
 import React from "react";
-import { Game } from "../../../shared/types/types";
+import { Game } from "./shared/types/types";
 import {
   Typography,
   Box,
@@ -12,11 +12,11 @@ import {
   Paper,
 } from "@mui/material";
 
-type Props = {
+type GameStatsProps = {
   games: Game[];
 };
 
-const GameStats: React.FC<Props> = ({ games }) => {
+const GameStats: React.FC<GameStatsProps> = ({ games }) => {
   if (games.length === 0) return null;
 
   const maxOverall = Math.max(...games.map((g) => g.overall));

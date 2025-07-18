@@ -1,5 +1,4 @@
 import "./App.css";
-import GamesStats from "./GamesStats";
 import GamesTable from "./GamesTable";
 
 function App() {

@@ -10,9 +10,10 @@ import {
   Paper,
   Typography,
 } from "@mui/material";
-import { GameList } from "../../../shared/types/types";
+import { Game, GameList } from "./shared/types/types";
 import { tableCellClasses, styled } from "@mui/material";
 import GamesStats from "./GamesStats";
+import AddGame from "./AddGame";
 
 const GamesTable: React.FC = () => {
   const [games, setGames] = useState<GameList>([]);
@@ -32,6 +33,16 @@ const GamesTable: React.FC = () => {
       });
   }, []);
 
+  const handleAddGame = async (game: Game) => {
+    try {
+      const response = await axios.post("http://localhost:3001/games", game);
+      setGames((prev) => [...prev, response.data]);
+    } catch (err) {
+      console.error("Error adding game:", err);
+      alert("Failed to add game");
+    }
+  };
+
   //styling
   const StyledTableCell = styled(TableCell)(({ theme }) => ({
     [`&.${tableCellClasses.head}`]: {
@@ -45,6 +56,7 @@ const GamesTable: React.FC = () => {
 
   return (
     <>
+      <AddGame onAddGame={handleAddGame} />
       <TableContainer
         component={Paper}
         sx={{ maxHeight: "75vh", overflowY: "auto" }}

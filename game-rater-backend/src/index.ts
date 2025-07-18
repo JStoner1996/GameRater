@@ -1,6 +1,8 @@
 import express, { Request, Response } from "express";
-import { PrismaClient, Game } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
+import { gameSchema } from "../../game-rater-frontend/src/shared/validation/gameSchema";
 import cors from "cors";
+import { Game } from "../../game-rater-frontend/src/shared/types/types";
 
 const app = express();
 const prisma = new PrismaClient();
@@ -10,10 +12,53 @@ app.use(express.json());
 
 // Create a new game
 app.post("/games", async (req: Request, res: Response) => {
-  const data = req.body as Omit<Game, "id">;
+  try {
+    const validatedData = await gameSchema.validate(req.body, {
+      abortEarly: false,
+      stripUnknown: true,
+    });
 
-  const game = await prisma.game.create({ data });
-  res.json(game);
+    const {
+      title,
+      gameplay,
+      story,
+      characters,
+      fun,
+      artGraphics,
+      personal,
+      yearCompleted,
+    } = validatedData;
+
+    const overall =
+      gameplay + story + characters + fun + artGraphics + personal;
+
+    const stars =
+      overall >= 2 ? Math.round(((overall / 60) * 100) / 2 - 1) / 10 : 0;
+
+    const game = await prisma.game.create({
+      data: {
+        title,
+        gameplay,
+        story,
+        characters,
+        fun,
+        artGraphics,
+        personal,
+        yearCompleted,
+        overall,
+        stars,
+      },
+    });
+
+    res.status(201).json(game);
+  } catch (error: any) {
+    if (error.name === "ValidationError") {
+      return res.status(400).json({ errors: error.errors });
+    }
+
+    console.error("Error creating game:", error);
+    res.status(500).json({ error: "Failed to create game" });
+  }
 });
 
 // Get all games
