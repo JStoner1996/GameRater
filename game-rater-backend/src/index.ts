@@ -76,11 +76,56 @@ app.get("/games/:id", async (req: Request, res: Response) => {
 
 // Update a game
 app.put("/games/:id", async (req: Request, res: Response) => {
-  const id = parseInt(req.params.id);
-  const data = req.body as Omit<Game, "id">;
+  const gameId = Number(req.params.id);
 
-  const game = await prisma.game.update({ where: { id }, data });
-  res.json(game);
+  try {
+    const validatedData = await gameSchema.validate(req.body, {
+      abortEarly: false,
+      stripUnknown: true,
+    });
+
+    const {
+      title,
+      gameplay,
+      story,
+      characters,
+      fun,
+      artGraphics,
+      personal,
+      yearCompleted,
+    } = validatedData;
+
+    const overall =
+      gameplay + story + characters + fun + artGraphics + personal;
+
+    const stars =
+      overall >= 2 ? Math.round(((overall / 60) * 100) / 2 - 1) / 10 : 0;
+
+    const updatedGame = await prisma.game.update({
+      where: { id: gameId },
+      data: {
+        title,
+        gameplay,
+        story,
+        characters,
+        fun,
+        artGraphics,
+        personal,
+        yearCompleted,
+        overall,
+        stars,
+      },
+    });
+
+    res.json(updatedGame);
+  } catch (error: any) {
+    if (error.name === "ValidationError") {
+      return res.status(400).json({ errors: error.errors });
+    }
+
+    console.error("Error updating game:", error);
+    res.status(500).json({ error: "Failed to update game" });
+  }
 });
 
 // Delete a game

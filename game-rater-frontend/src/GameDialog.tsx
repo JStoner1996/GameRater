@@ -12,15 +12,22 @@ import {
 import { Game, GameList } from "./shared/types/types";
 import { gameSchema } from "./shared/validation/gameSchema";
 import { Formik, Form } from "formik";
+import axios from "axios";
 
-type AddGameProps = {
-  onAddGame: (game: Game) => void;
+type GameDialogProps = {
+  open: boolean;
   gameList: GameList;
+  initialGame?: Game | null;
+  onClose: () => void;
+  onGameSaved: (game: Game) => void;
 };
-
-const AddGame: React.FC<AddGameProps> = ({ onAddGame, gameList }) => {
-  const [open, setOpen] = useState(false);
-
+const GameDialog: React.FC<GameDialogProps> = ({
+  open,
+  gameList,
+  initialGame,
+  onGameSaved,
+  onClose,
+}) => {
   const calculateOverall = (values: any) =>
     values.gameplay +
     values.story +
@@ -51,35 +58,55 @@ const AddGame: React.FC<AddGameProps> = ({ onAddGame, gameList }) => {
     return { above: closestAbove, equal: equalGames, below: closestBelow };
   };
 
+  const handleSaveGame = async (game: Game, isEditing: boolean) => {
+    try {
+      const url = isEditing
+        ? `http://localhost:3001/games/${game.id}`
+        : "http://localhost:3001/games";
+
+      const method = isEditing ? "put" : "post";
+      const response = await axios[method](url, game);
+
+      return response.data; // Return for success handling
+    } catch (error) {
+      console.error("Error saving game:", error);
+      alert(`Failed to ${isEditing ? "edit" : "add"} game`);
+      throw error;
+    }
+  };
+
   return (
     <>
-      <Button variant="contained" onClick={() => setOpen(true)} sx={{ my: 2 }}>
-        Add Game
-      </Button>
       <Dialog
         open={open}
-        onClose={() => setOpen(false)}
         fullWidth
         maxWidth="md"
-        sx={{ "& .MuiPaper-root": { width: 700, height: 700 } }} // fixed size of dialog
+        sx={{ "& .MuiPaper-root": { width: 700, height: 700 } }}
       >
         <DialogTitle align="center">Add New Game</DialogTitle>
         <Formik
           initialValues={{
-            title: "",
-            gameplay: 0,
-            story: 0,
-            characters: 0,
-            fun: 0,
-            artGraphics: 0,
-            personal: 0,
-            yearCompleted: new Date().getFullYear(),
+            id: initialGame?.id ?? undefined,
+            title: initialGame?.title || "",
+            gameplay: initialGame?.gameplay ?? 0,
+            story: initialGame?.story ?? 0,
+            characters: initialGame?.characters ?? 0,
+            fun: initialGame?.fun ?? 0,
+            artGraphics: initialGame?.artGraphics ?? 0,
+            personal: initialGame?.personal ?? 0,
+            yearCompleted:
+              initialGame?.yearCompleted ?? new Date().getFullYear(),
           }}
           validationSchema={gameSchema}
           onSubmit={(values, { resetForm }) => {
-            onAddGame(values as Game);
-            resetForm();
-            setOpen(false);
+            handleSaveGame(values as Game, !!initialGame?.id).then(
+              (savedGame) => {
+                // Optionally inform parent component
+                onGameSaved(savedGame);
+                resetForm();
+                onClose();
+              }
+            );
           }}
         >
           {({ errors, touched, handleChange, values }) => {
@@ -96,7 +123,6 @@ const AddGame: React.FC<AddGameProps> = ({ onAddGame, gameList }) => {
                     rowSpacing={1}
                     columnSpacing={{ xs: 1, sm: 2, md: 3 }}
                   >
-                    {/* Form Inputs in Two Columns */}
                     {Object.keys(values).map((field) => (
                       <Grid size={6}>
                         <TextField
@@ -121,14 +147,12 @@ const AddGame: React.FC<AddGameProps> = ({ onAddGame, gameList }) => {
                     ))}
                   </Grid>
 
-                  {/* Overall Score */}
                   <Grid>
                     <Typography variant="h6" align="left" mt={3}>
                       Overall Score: {overall}
                     </Typography>
                   </Grid>
 
-                  {/* Closest Games */}
                   <Grid
                     container
                     spacing={8}
@@ -205,4 +229,4 @@ const AddGame: React.FC<AddGameProps> = ({ onAddGame, gameList }) => {
   );
 };
 
-export default AddGame;
+export default GameDialog;

@@ -9,16 +9,19 @@ import {
   TableRow,
   Paper,
   Typography,
+  Button,
 } from "@mui/material";
 import { Game, GameList } from "./shared/types/types";
 import { tableCellClasses, styled } from "@mui/material";
 import GamesStats from "./GamesStats";
-import AddGame from "./AddGame";
+import GameDialog from "./GameDialog";
 
 const GamesTable: React.FC = () => {
   const [games, setGames] = useState<GameList>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedGame, setSelectedGame] = useState<Game | null>(null);
 
   useEffect(() => {
     axios
@@ -33,14 +36,13 @@ const GamesTable: React.FC = () => {
       });
   }, []);
 
-  const handleAddGame = async (game: Game) => {
-    try {
-      const response = await axios.post("http://localhost:3001/games", game);
-      setGames((prev) => [...prev, response.data]);
-    } catch (err) {
-      console.error("Error adding game:", err);
-      alert("Failed to add game");
-    }
+  const handleGameSaved = (savedGame: Game) => {
+    setGames((prev) => {
+      const existing = prev.find((g) => g.id === savedGame.id);
+      return existing
+        ? prev.map((g) => (g.id === savedGame.id ? savedGame : g))
+        : [...prev, savedGame];
+    });
   };
 
   //styling
@@ -56,7 +58,16 @@ const GamesTable: React.FC = () => {
 
   return (
     <>
-      <AddGame onAddGame={handleAddGame} gameList={games} />
+      <Button
+        variant="contained"
+        sx={{ my: 2 }}
+        onClick={() => {
+          setSelectedGame(null);
+          setDialogOpen(true);
+        }}
+      >
+        Add Game
+      </Button>
       <TableContainer
         component={Paper}
         sx={{ maxHeight: "75vh", overflowY: "auto" }}
@@ -83,15 +94,18 @@ const GamesTable: React.FC = () => {
           <TableBody>
             {games.map((game) => (
               <TableRow key={game.id}>
-                <TableCell>
-                  <Typography
-                    variant="body1"
-                    color="primary"
-                    sx={{ cursor: "pointer", textDecoration: "underline" }}
-                    onClick={() => console.log("Edit", game.id)} // Placeholder for edit
-                  >
-                    {game.title}
-                  </Typography>
+                <TableCell
+                  onClick={() => {
+                    setSelectedGame(game);
+                    setDialogOpen(true);
+                  }}
+                  sx={{
+                    cursor: "pointer",
+                    color: "primary.main",
+                    textDecoration: "underline",
+                  }}
+                >
+                  {game.title}
                 </TableCell>
                 <TableCell>{game.gameplay}</TableCell>
                 <TableCell>{game.story}</TableCell>
@@ -118,6 +132,13 @@ const GamesTable: React.FC = () => {
         </Table>
       </TableContainer>
       <GamesStats games={games} />
+      <GameDialog
+        open={dialogOpen}
+        gameList={games}
+        onClose={() => setDialogOpen(false)}
+        initialGame={selectedGame}
+        onGameSaved={handleGameSaved}
+      />
     </>
   );
 };
