@@ -77,12 +77,22 @@ const GamesTable: React.FC = () => {
               <StyledTableCell>Overall</StyledTableCell>
               <StyledTableCell>Stars</StyledTableCell>
               <StyledTableCell>Year Completed</StyledTableCell>
+              <StyledTableCell>{""}</StyledTableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {games.map((game) => (
               <TableRow key={game.id}>
-                <TableCell>{game.title}</TableCell>
+                <TableCell>
+                  <Typography
+                    variant="body1"
+                    color="primary"
+                    sx={{ cursor: "pointer", textDecoration: "underline" }}
+                    onClick={() => console.log("Edit", game.id)} // Placeholder for edit
+                  >
+                    {game.title}
+                  </Typography>
+                </TableCell>
                 <TableCell>{game.gameplay}</TableCell>
                 <TableCell>{game.story}</TableCell>
                 <TableCell>{game.characters}</TableCell>
@@ -92,6 +102,16 @@ const GamesTable: React.FC = () => {
                 <TableCell>{game.overall}</TableCell>
                 <TableCell>{game.stars}</TableCell>
                 <TableCell>{game.yearCompleted}</TableCell>
+                <TableCell>
+                  <Typography
+                    variant="body2"
+                    color="error"
+                    sx={{ cursor: "pointer", textDecoration: "underline" }}
+                    onClick={() => console.log("Delete", game.id)} // Placeholder for delete
+                  >
+                    Delete
+                  </Typography>
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
