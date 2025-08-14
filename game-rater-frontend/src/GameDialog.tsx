@@ -191,8 +191,17 @@ const GameDialog: React.FC<GameDialogProps> = ({
                         Same Overall
                       </Typography>
                       {closest.equal.length > 0 ? (
-                        closest.equal.map((g) => (
-                          <Typography key={g.id}>{g.title}</Typography>
+                        closest.equal.map((g, index) => (
+                          <Box
+                            key={g.id}
+                            sx={{
+                              backgroundColor:
+                                index % 2 === 0 ? "white" : "#f5f5f5",
+                              p: 0.5,
+                            }}
+                          >
+                            <Typography>{g.title}</Typography>
+                          </Box>
                         ))
                       ) : (
                         <Typography>No game with same overall</Typography>
