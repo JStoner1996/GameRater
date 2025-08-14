@@ -8,6 +8,13 @@ import {
   Grid,
   Typography,
   Box,
+  TableContainer,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableRow,
 } from "@mui/material";
 import { Game, GameList } from "./shared/types/types";
 import { gameSchema } from "./shared/validation/gameSchema";
@@ -36,12 +43,21 @@ const GameDialog: React.FC<GameDialogProps> = ({
     values.artGraphics +
     values.personal;
 
-  const findClosestGames = (games: Game[], overall: number) => {
-    if (games.length === 0) return { above: null, equal: [], below: null };
+  const findClosestGames = (
+    games: Game[],
+    overall: number,
+    excludeId?: number
+  ) => {
+    const filteredGames = excludeId
+      ? games.filter((g) => g.id !== excludeId)
+      : games;
 
-    const aboveGames = games.filter((g) => g.overall > overall);
-    const belowGames = games.filter((g) => g.overall < overall);
-    const equalGames = games.filter((g) => g.overall === overall);
+    if (filteredGames.length === 0)
+      return { aboveAll: [], equal: [], belowAll: [] };
+
+    const aboveGames = filteredGames.filter((g) => g.overall > overall);
+    const belowGames = filteredGames.filter((g) => g.overall < overall);
+    const equalGames = filteredGames.filter((g) => g.overall === overall);
 
     const closestAbove = aboveGames.length
       ? aboveGames.reduce((prev, curr) =>
@@ -55,7 +71,14 @@ const GameDialog: React.FC<GameDialogProps> = ({
         )
       : null;
 
-    return { above: closestAbove, equal: equalGames, below: closestBelow };
+    const aboveAll = closestAbove
+      ? aboveGames.filter((g) => g.overall === closestAbove.overall)
+      : [];
+    const belowAll = closestBelow
+      ? belowGames.filter((g) => g.overall === closestBelow.overall)
+      : [];
+
+    return { aboveAll, equal: equalGames, belowAll };
   };
 
   const handleSaveGame = async (game: Game, isEditing: boolean) => {
@@ -81,7 +104,7 @@ const GameDialog: React.FC<GameDialogProps> = ({
         open={open}
         fullWidth
         maxWidth="md"
-        sx={{ "& .MuiPaper-root": { width: 700, height: 700 } }}
+        sx={{ "& .MuiPaper-root": { width: 800, height: 800 } }}
       >
         <DialogTitle align="center">Add New Game</DialogTitle>
         <Formik
@@ -111,7 +134,11 @@ const GameDialog: React.FC<GameDialogProps> = ({
         >
           {({ errors, touched, handleChange, values }) => {
             const overall = calculateOverall(values);
-            const closest = findClosestGames(gameList, overall);
+            const closest = findClosestGames(
+              gameList,
+              overall,
+              initialGame?.id
+            );
 
             return (
               <Form
@@ -157,68 +184,64 @@ const GameDialog: React.FC<GameDialogProps> = ({
                     </Typography>
                   </Grid>
 
-                  <Grid
-                    container
-                    spacing={8}
-                    sx={{
-                      minHeight: 180,
-                      maxHeight: 180,
-                      flexShrink: 0,
-                    }}
-                    mt={3}
+                  <TableContainer
+                    component={Paper}
+                    sx={{ maxHeight: 180, flexShrink: 0, overflowY: "auto" }}
                   >
-                    <Grid sx={{ maxWidth: 165, minWidth: 165 }}>
-                      <Typography variant="subtitle1" fontWeight="bold">
-                        Closest Above
-                      </Typography>
-                      {closest.above ? (
-                        <Typography>{`${closest.above.title} (${closest.above.overall})`}</Typography>
-                      ) : (
-                        <Typography>No game above</Typography>
-                      )}
-                    </Grid>
-
-                    <Grid
-                      sx={{
-                        maxHeight: 150,
-                        maxWidth: 165,
-                        minWidth: 165,
-                        overflowY:
-                          closest.equal.length > 5 ? "auto" : "visible",
-                      }}
-                    >
-                      <Typography variant="subtitle1" fontWeight="bold">
-                        Same Overall
-                      </Typography>
-                      {closest.equal.length > 0 ? (
-                        closest.equal.map((g, index) => (
-                          <Box
-                            key={g.id}
+                    <Table stickyHeader size="small">
+                      <TableHead>
+                        <TableRow>
+                          <TableCell align="center" sx={{ fontWeight: "bold" }}>
+                            Closest Above
+                            {closest.aboveAll.length > 0 &&
+                              ` (${closest.aboveAll[0].overall})`}
+                          </TableCell>
+                          <TableCell align="center" sx={{ fontWeight: "bold" }}>
+                            Same Overall
+                            {closest.equal.length > 0 && ` (${overall})`}
+                          </TableCell>
+                          <TableCell align="center" sx={{ fontWeight: "bold" }}>
+                            Closest Below
+                            {closest.belowAll.length > 0 &&
+                              ` (${closest.belowAll[0].overall})`}
+                          </TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {Array.from({
+                          length: Math.max(
+                            closest.aboveAll.length || 1,
+                            closest.equal.length || 1,
+                            closest.belowAll.length || 1
+                          ),
+                        }).map((_, idx) => (
+                          <TableRow
+                            key={idx}
                             sx={{
                               backgroundColor:
-                                index % 2 === 0 ? "white" : "#f5f5f5",
-                              p: 0.5,
+                                idx % 2 === 0 ? "white" : "#f5f5f5",
                             }}
                           >
-                            <Typography>{g.title}</Typography>
-                          </Box>
-                        ))
-                      ) : (
-                        <Typography>No game with same overall</Typography>
-                      )}
-                    </Grid>
-
-                    <Grid sx={{ maxWidth: 165, minWidth: 165 }}>
-                      <Typography variant="subtitle1" fontWeight="bold">
-                        Closest Below
-                      </Typography>
-                      {closest.below ? (
-                        <Typography>{`${closest.below.title} (${closest.below.overall})`}</Typography>
-                      ) : (
-                        <Typography>No game below</Typography>
-                      )}
-                    </Grid>
-                  </Grid>
+                            <TableCell align="center">
+                              {closest.aboveAll[idx]
+                                ? closest.aboveAll[idx].title
+                                : ""}
+                            </TableCell>
+                            <TableCell align="center">
+                              {closest.equal[idx]
+                                ? closest.equal[idx].title
+                                : ""}
+                            </TableCell>
+                            <TableCell align="center">
+                              {closest.belowAll[idx]
+                                ? closest.belowAll[idx].title
+                                : ""}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
                 </DialogContent>
 
                 <Box
