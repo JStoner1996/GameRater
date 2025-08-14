@@ -123,28 +123,32 @@ const GameDialog: React.FC<GameDialogProps> = ({
                     rowSpacing={1}
                     columnSpacing={{ xs: 1, sm: 2, md: 3 }}
                   >
-                    {Object.keys(values).map((field) => (
-                      <Grid size={6}>
-                        <TextField
-                          name={field}
-                          label={field.charAt(0).toUpperCase() + field.slice(1)}
-                          type={field === "title" ? "text" : "number"}
-                          value={values[field as keyof typeof values]}
-                          onChange={handleChange}
-                          fullWidth
-                          error={Boolean(
-                            touched[field as keyof typeof touched] &&
+                    {Object.keys(values)
+                      .filter((field) => field !== "id")
+                      .map((field) => (
+                        <Grid size={6}>
+                          <TextField
+                            name={field}
+                            label={
+                              field.charAt(0).toUpperCase() + field.slice(1)
+                            }
+                            type={field === "title" ? "text" : "number"}
+                            value={values[field as keyof typeof values]}
+                            onChange={handleChange}
+                            fullWidth
+                            error={Boolean(
+                              touched[field as keyof typeof touched] &&
+                                errors[field as keyof typeof errors]
+                            )}
+                            helperText={
+                              touched[field as keyof typeof touched] &&
                               errors[field as keyof typeof errors]
-                          )}
-                          helperText={
-                            touched[field as keyof typeof touched] &&
-                            errors[field as keyof typeof errors]
-                              ? errors[field as keyof typeof errors]
-                              : ""
-                          }
-                        />
-                      </Grid>
-                    ))}
+                                ? errors[field as keyof typeof errors]
+                                : ""
+                            }
+                          />
+                        </Grid>
+                      ))}
                   </Grid>
 
                   <Grid>
