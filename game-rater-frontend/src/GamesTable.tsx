@@ -15,13 +15,23 @@ import { Game, GameList } from "./shared/types/types";
 import { tableCellClasses, styled } from "@mui/material";
 import GamesStats from "./GamesStats";
 import GameDialog from "./GameDialog";
+import ConfirmDialog from "./ConfirmDialog";
 
 const GamesTable: React.FC = () => {
   const [games, setGames] = useState<GameList>([]);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [dialogOpen, setDialogOpen] = useState(false);
+
   const [selectedGame, setSelectedGame] = useState<Game | null>(null);
+  const [gameToDelete, setGameToDelete] = useState<{
+    id: number;
+    title: string;
+  } | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   useEffect(() => {
     axios
@@ -43,6 +53,40 @@ const GamesTable: React.FC = () => {
         ? prev.map((g) => (g.id === savedGame.id ? savedGame : g))
         : [...prev, savedGame];
     });
+  };
+
+  const handleDeleteClick = (id: number) => {
+    const game = games.find((g) => g.id === id);
+
+    if (!game) return;
+
+    setGameToDelete({ id: game.id, title: game.title });
+    setConfirmOpen(true);
+  };
+
+  const handleCancelDelete = () => {
+    setConfirmOpen(false);
+    setGameToDelete(null);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!gameToDelete) return;
+
+    setDeleting(true);
+
+    try {
+      await axios.delete(`http://localhost:3001/games/${gameToDelete.id}`);
+
+      setGames((prev) => prev.filter((g) => g.id !== gameToDelete.id));
+
+      setConfirmOpen(false);
+      setGameToDelete(null);
+    } catch (err) {
+      console.error("Failed to delete game:", err);
+      alert("Failed to delete game");
+    } finally {
+      setDeleting(false);
+    }
   };
 
   //styling
@@ -72,9 +116,6 @@ const GamesTable: React.FC = () => {
         component={Paper}
         sx={{ maxHeight: "75vh", overflowY: "auto" }}
       >
-        <Typography variant="h5" component="div" sx={{ p: 2 }}>
-          Game List
-        </Typography>
         <Table stickyHeader sx={{ "& td, & th": { textAlign: "center" } }}>
           <TableHead>
             <TableRow>
@@ -88,7 +129,7 @@ const GamesTable: React.FC = () => {
               <StyledTableCell>Overall</StyledTableCell>
               <StyledTableCell>Stars</StyledTableCell>
               <StyledTableCell>Year Completed</StyledTableCell>
-              <StyledTableCell>{""}</StyledTableCell>
+              <StyledTableCell />
             </TableRow>
           </TableHead>
           <TableBody>
@@ -121,7 +162,7 @@ const GamesTable: React.FC = () => {
                     variant="body2"
                     color="error"
                     sx={{ cursor: "pointer", textDecoration: "underline" }}
-                    onClick={() => console.log("Delete", game.id)} // Placeholder for delete
+                    onClick={() => handleDeleteClick(game.id)}
                   >
                     Delete
                   </Typography>
@@ -138,6 +179,14 @@ const GamesTable: React.FC = () => {
         onClose={() => setDialogOpen(false)}
         initialGame={selectedGame}
         onGameSaved={handleGameSaved}
+      />
+      <ConfirmDialog
+        open={confirmOpen}
+        title="Confirm Deletion"
+        gameName={gameToDelete?.title}
+        onCancel={handleCancelDelete}
+        onConfirm={handleConfirmDelete}
+        loading={deleting}
       />
     </>
   );
