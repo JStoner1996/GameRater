@@ -11,11 +11,26 @@ import {
   Typography,
   Button,
 } from "@mui/material";
-import { Game, GameList } from "./shared/types/types";
+import { Game, GameList, Order } from "./shared/types/types";
 import { tableCellClasses, styled } from "@mui/material";
 import GamesStats from "./GamesStats";
 import GameDialog from "./GameDialog";
 import ConfirmDialog from "./ConfirmDialog";
+import { getComparator, stableSort } from "./shared/helpers/Sorting";
+
+const columns: { key: keyof Game | "actions"; label: string }[] = [
+  { key: "title", label: "Title" },
+  { key: "gameplay", label: "Gameplay" },
+  { key: "story", label: "Story" },
+  { key: "characters", label: "Characters" },
+  { key: "fun", label: "Fun" },
+  { key: "artGraphics", label: "Art / Graphics" },
+  { key: "personal", label: "Personal" },
+  { key: "overall", label: "Overall" },
+  { key: "stars", label: "Stars" },
+  { key: "yearCompleted", label: "Year Completed" },
+  { key: "actions", label: "" }, // delete button column
+];
 
 const GamesTable: React.FC = () => {
   const [games, setGames] = useState<GameList>([]);
@@ -32,6 +47,9 @@ const GamesTable: React.FC = () => {
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+
+  const [order, setOrder] = useState<Order>("asc");
+  const [orderBy, setOrderBy] = useState<keyof Game>("title");
 
   useEffect(() => {
     axios
@@ -89,13 +107,25 @@ const GamesTable: React.FC = () => {
     }
   };
 
+  const handleRequestSort = (property: keyof Game) => {
+    const isAsc = orderBy === property && order === "asc";
+    setOrder(isAsc ? "desc" : "asc");
+    setOrderBy(property);
+  };
+
   //styling
-  const StyledTableCell = styled(TableCell)(({ theme }) => ({
+  const StyledTableHeaderCell = styled(TableCell)(({ theme }) => ({
     [`&.${tableCellClasses.head}`]: {
       backgroundColor: theme.palette.common.black,
-      color: theme.palette.common.white,
+      textAlign: "center",
+      cursor: "pointer",
+      userSelect: "none",
     },
   }));
+
+  const StyledBodyTableCell = styled(TableCell)({
+    textAlign: "center",
+  });
 
   if (loading) return <Typography>Loading games...</Typography>;
   if (error) return <Typography color="error">{error}</Typography>;
@@ -112,30 +142,46 @@ const GamesTable: React.FC = () => {
       >
         Add Game
       </Button>
+
       <TableContainer
         component={Paper}
         sx={{ maxHeight: "75vh", overflowY: "auto" }}
       >
-        <Table stickyHeader sx={{ "& td, & th": { textAlign: "center" } }}>
+        <Table stickyHeader sx={{ borderCollapse: "collapse" }}>
           <TableHead>
             <TableRow>
-              <StyledTableCell>Title</StyledTableCell>
-              <StyledTableCell>Gameplay</StyledTableCell>
-              <StyledTableCell>Story</StyledTableCell>
-              <StyledTableCell>Characters</StyledTableCell>
-              <StyledTableCell>Fun</StyledTableCell>
-              <StyledTableCell>Art / Graphics</StyledTableCell>
-              <StyledTableCell>Personal</StyledTableCell>
-              <StyledTableCell>Overall</StyledTableCell>
-              <StyledTableCell>Stars</StyledTableCell>
-              <StyledTableCell>Year Completed</StyledTableCell>
-              <StyledTableCell />
+              {columns.map((column) => {
+                let color = "white";
+                if (orderBy === column.key) {
+                  color = order === "asc" ? "red" : "green";
+                }
+
+                return (
+                  <StyledTableHeaderCell
+                    key={column.key}
+                    onClick={() =>
+                      column.key !== "actions" &&
+                      handleRequestSort(column.key as keyof Game)
+                    }
+                    sx={{
+                      textAlign: "center",
+                      cursor: column.key === "actions" ? "default" : "pointer",
+                      fontWeight: "bold",
+                      color,
+                      userSelect: "none",
+                    }}
+                  >
+                    {column.label}
+                  </StyledTableHeaderCell>
+                );
+              })}
             </TableRow>
           </TableHead>
+
           <TableBody>
-            {games.map((game) => (
+            {stableSort(games, getComparator(order, orderBy)).map((game) => (
               <TableRow key={game.id}>
-                <TableCell
+                <StyledBodyTableCell
                   onClick={() => {
                     setSelectedGame(game);
                     setDialogOpen(true);
@@ -147,17 +193,17 @@ const GamesTable: React.FC = () => {
                   }}
                 >
                   {game.title}
-                </TableCell>
-                <TableCell>{game.gameplay}</TableCell>
-                <TableCell>{game.story}</TableCell>
-                <TableCell>{game.characters}</TableCell>
-                <TableCell>{game.fun}</TableCell>
-                <TableCell>{game.artGraphics}</TableCell>
-                <TableCell>{game.personal}</TableCell>
-                <TableCell>{game.overall}</TableCell>
-                <TableCell>{game.stars}</TableCell>
-                <TableCell>{game.yearCompleted}</TableCell>
-                <TableCell>
+                </StyledBodyTableCell>
+                <StyledBodyTableCell>{game.gameplay}</StyledBodyTableCell>
+                <StyledBodyTableCell>{game.story}</StyledBodyTableCell>
+                <StyledBodyTableCell>{game.characters}</StyledBodyTableCell>
+                <StyledBodyTableCell>{game.fun}</StyledBodyTableCell>
+                <StyledBodyTableCell>{game.artGraphics}</StyledBodyTableCell>
+                <StyledBodyTableCell>{game.personal}</StyledBodyTableCell>
+                <StyledBodyTableCell>{game.overall}</StyledBodyTableCell>
+                <StyledBodyTableCell>{game.stars}</StyledBodyTableCell>
+                <StyledBodyTableCell>{game.yearCompleted}</StyledBodyTableCell>
+                <StyledBodyTableCell>
                   <Typography
                     variant="body2"
                     color="error"
@@ -166,13 +212,15 @@ const GamesTable: React.FC = () => {
                   >
                     Delete
                   </Typography>
-                </TableCell>
+                </StyledBodyTableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
       </TableContainer>
+
       <GamesStats games={games} />
+
       <GameDialog
         open={dialogOpen}
         gameList={games}
@@ -180,13 +228,13 @@ const GamesTable: React.FC = () => {
         initialGame={selectedGame}
         onGameSaved={handleGameSaved}
       />
+
       <ConfirmDialog
         open={confirmOpen}
         title="Confirm Deletion"
         gameName={gameToDelete?.title}
         onCancel={handleCancelDelete}
         onConfirm={handleConfirmDelete}
-        loading={deleting}
       />
     </>
   );

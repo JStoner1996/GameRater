@@ -13,3 +13,5 @@ export interface Game {
 }
 
 export type GameList = Game[];
+
+export type Order = "asc" | "desc";
