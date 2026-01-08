@@ -54,7 +54,7 @@ const GamesTable: React.FC = () => {
   const [deleting, setDeleting] = useState(false);
 
   const [order, setOrder] = useState<Order>("asc");
-  const [orderBy, setOrderBy] = useState<keyof Game>("title");
+  const [orderBy, setOrderBy] = useState<keyof Game>("overall");
 
   useEffect(() => {
     axios
@@ -97,8 +97,15 @@ const GamesTable: React.FC = () => {
   };
 
   const handleRequestSort = (property: keyof Game) => {
-    const isAsc = orderBy === property && order === "asc";
-    setOrder(isAsc ? "desc" : "asc");
+    let newOrder: Order;
+
+    if (property === orderBy) {
+      newOrder = order === "asc" ? "desc" : "asc";
+    } else {
+      newOrder = property === "title" ? "desc" : "asc";
+    }
+
+    setOrder(newOrder);
     setOrderBy(property);
   };
 
@@ -135,12 +142,16 @@ const GamesTable: React.FC = () => {
           <TableHead>
             <TableRow>
               {columns.map((col) => {
-                const color =
-                  orderBy === col.key
-                    ? order === "asc"
-                      ? "red"
-                      : "green"
-                    : "white";
+                let color = "white";
+
+                if (orderBy === col.key) {
+                  if (col.key === "title") {
+                    // Reverse colors for title
+                    color = order === "asc" ? "red" : "green";
+                  } else {
+                    color = order === "asc" ? "green" : "red";
+                  }
+                }
                 return (
                   <StyledHeaderCell
                     key={col.key}
