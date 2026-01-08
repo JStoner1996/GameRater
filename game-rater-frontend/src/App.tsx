@@ -1,11 +1,11 @@
 import "./App.css";
-import GamesTable from "./GamesTable";
+import GamesDashboard from "./GamesDashboard";
 
 function App() {
   return (
     <div className="App">
       <h1>My Game Rankings</h1>
-      <GamesTable />
+      <GamesDashboard />
     </div>
   );
 }
