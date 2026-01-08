@@ -207,8 +207,12 @@ const GamesTable: React.FC = () => {
                   <Typography
                     variant="body2"
                     color="error"
-                    sx={{ cursor: "pointer", textDecoration: "underline" }}
-                    onClick={() => handleDeleteClick(game.id)}
+                    sx={{
+                      cursor: deleting ? "not-allowed" : "pointer",
+                      textDecoration: deleting ? "none" : "underline",
+                      opacity: deleting ? 0.5 : 1,
+                    }}
+                    onClick={() => !deleting && handleDeleteClick(game.id)}
                   >
                     Delete
                   </Typography>
@@ -235,6 +239,7 @@ const GamesTable: React.FC = () => {
         gameName={gameToDelete?.title}
         onCancel={handleCancelDelete}
         onConfirm={handleConfirmDelete}
+        loading={deleting}
       />
     </>
   );

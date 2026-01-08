@@ -14,7 +14,7 @@ type ConfirmDialogProps = {
   gameName?: string;
   onCancel: () => void;
   onConfirm: () => void;
-  loading?: boolean;
+  loading?: boolean; // NEW
 };
 
 const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
@@ -23,7 +23,7 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   gameName,
   onCancel,
   onConfirm,
-  loading = false,
+  loading = false, // default to false
 }) => {
   return (
     <Dialog open={open} onClose={onCancel}>
