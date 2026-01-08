@@ -117,7 +117,7 @@ const GamesDashboard: React.FC = () => {
       <GameSearch games={games} onResults={setFilteredGames} />
 
       {filteredGames.length === 0 ? (
-        <NoGamesFound message="No games found" />
+        <NoGamesFound />
       ) : (
         <GamesTable
           games={filteredGames}

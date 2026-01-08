@@ -25,7 +25,7 @@ type GamesTableProps = {
   onRowClick?: (game: Game) => void;
   onDeleteClick?: (id: number) => void;
   deleting?: boolean;
-  showActions?: boolean;
+  showExtras?: boolean;
 };
 
 const StyledHeaderCell = styled(TableCell)(({ theme }) => ({
@@ -50,16 +50,17 @@ const GamesTable: React.FC<GamesTableProps> = ({
   onRowClick,
   onDeleteClick,
   deleting,
-  showActions = true,
+  showExtras = true,
 }) => {
   return (
     <TableContainer
       component={Paper}
-      sx={{ maxHeight: "75vh", overflowY: "auto" }}
+      sx={{ maxHeight: "75vh", overflowY: "auto", maxWidth: "100%" }}
     >
       <Table stickyHeader sx={{ borderCollapse: "collapse" }}>
         <TableHead>
           <TableRow>
+            {/* Title column */}
             <StyledHeaderCell
               onClick={() => onSort?.("title")}
               sx={{
@@ -74,40 +75,48 @@ const GamesTable: React.FC<GamesTableProps> = ({
               Title
             </StyledHeaderCell>
 
-            {numericColumns.map((col) => (
+            {/* Numeric columns, skip stars if showExtras is false */}
+            {numericColumns.map((col) => {
+              if (!showExtras && col === "stars") return null;
+
+              return (
+                <StyledHeaderCell
+                  key={col}
+                  onClick={() => onSort?.(col)}
+                  sx={{
+                    color:
+                      orderBy === col
+                        ? order === "asc"
+                          ? "green"
+                          : "red"
+                        : "white",
+                  }}
+                >
+                  {col === "artGraphics"
+                    ? "Art / Graphics"
+                    : col.charAt(0).toUpperCase() + col.slice(1)}
+                </StyledHeaderCell>
+              );
+            })}
+
+            {/* Year Completed */}
+            {showExtras && (
               <StyledHeaderCell
-                key={col}
-                onClick={() => onSort?.(col)}
+                onClick={() => onSort?.("yearCompleted")}
                 sx={{
                   color:
-                    orderBy === col
+                    orderBy === "yearCompleted"
                       ? order === "asc"
-                        ? "green"
-                        : "red"
+                        ? "red"
+                        : "green"
                       : "white",
                 }}
               >
-                {col === "artGraphics"
-                  ? "Art / Graphics"
-                  : col.charAt(0).toUpperCase() + col.slice(1)}
+                Year Completed
               </StyledHeaderCell>
-            ))}
+            )}
 
-            <StyledHeaderCell
-              onClick={() => onSort?.("yearCompleted")}
-              sx={{
-                color:
-                  orderBy === "yearCompleted"
-                    ? order === "asc"
-                      ? "red"
-                      : "green"
-                    : "white",
-              }}
-            >
-              Year Completed
-            </StyledHeaderCell>
-
-            {showActions && <StyledHeaderCell />}
+            {showExtras && <StyledHeaderCell />}
           </TableRow>
         </TableHead>
 
@@ -126,6 +135,9 @@ const GamesTable: React.FC<GamesTableProps> = ({
               </StyledBodyCell>
 
               {numericColumns.map((col) => {
+                // Skip "stars" if showExtras is false
+                if (!showExtras && col === "stars") return null;
+
                 const value = game[col] as number;
                 const { backgroundColor, textColor } = getCellColors(
                   value,
@@ -142,9 +154,11 @@ const GamesTable: React.FC<GamesTableProps> = ({
                 );
               })}
 
-              <StyledBodyCell>{game.yearCompleted}</StyledBodyCell>
+              {showExtras && (
+                <StyledBodyCell>{game.yearCompleted}</StyledBodyCell>
+              )}
 
-              {showActions && (
+              {showExtras && (
                 <StyledBodyCell>
                   <Typography
                     variant="body2"

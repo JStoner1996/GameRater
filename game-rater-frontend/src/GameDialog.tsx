@@ -20,6 +20,9 @@ import { Game, GameList } from "./shared/types/types";
 import { gameSchema } from "./shared/validation/gameSchema";
 import { Formik, Form } from "formik";
 import axios from "axios";
+import GameSearch from "./GameSearch";
+import GamesTable from "./GamesTable";
+import NoGamesFound from "./NoGamesFound";
 
 type GameDialogProps = {
   open: boolean;
@@ -35,6 +38,9 @@ const GameDialog: React.FC<GameDialogProps> = ({
   onGameSaved,
   onClose,
 }) => {
+  const [searchResults, setSearchResults] = useState<Game[]>([]);
+  const [searchTerm, setSearchTerm] = useState<string>("");
+
   const calculateOverall = (values: any) =>
     values.gameplay +
     values.story +
@@ -104,7 +110,7 @@ const GameDialog: React.FC<GameDialogProps> = ({
         open={open}
         fullWidth
         maxWidth="md"
-        sx={{ "& .MuiPaper-root": { width: 800, height: 800 } }}
+        sx={{ "& .MuiPaper-root": { width: 850, height: 1000 } }}
       >
         <DialogTitle align="center">Add New Game</DialogTitle>
         <Formik
@@ -142,7 +148,12 @@ const GameDialog: React.FC<GameDialogProps> = ({
 
             return (
               <Form
-                style={{ flex: 1, position: "relative", paddingBottom: 80 }}
+                style={{
+                  flex: 1,
+                  position: "relative",
+                  paddingBottom: 80,
+                  margin: 2,
+                }}
               >
                 <DialogContent sx={{ overflow: "hidden", flex: 1 }}>
                   <Grid
@@ -186,7 +197,12 @@ const GameDialog: React.FC<GameDialogProps> = ({
 
                   <TableContainer
                     component={Paper}
-                    sx={{ maxHeight: 180, flexShrink: 0, overflowY: "auto" }}
+                    sx={{
+                      maxHeight: 180,
+                      maxWidth: 800,
+                      flexShrink: 0,
+                      overflowY: "auto",
+                    }}
                   >
                     <Table stickyHeader size="small">
                       <TableHead>
@@ -243,6 +259,36 @@ const GameDialog: React.FC<GameDialogProps> = ({
                     </Table>
                   </TableContainer>
                 </DialogContent>
+
+                {/* Search and Table section at the bottom */}
+                <Box mt={3} maxWidth={800} marginLeft={3}>
+                  <GameSearch
+                    games={gameList}
+                    hideIfEmpty
+                    onResults={(results, term) => {
+                      setSearchResults(results);
+                      setSearchTerm(term);
+                    }}
+                  />
+                  {searchTerm ? (
+                    searchResults.length > 0 ? (
+                      <Box
+                        maxWidth={800} // same width as your GameDialog
+                        width="100%"
+                        my={2}
+                      >
+                        <GamesTable
+                          games={searchResults}
+                          order="asc"
+                          orderBy="title"
+                          showExtras={false}
+                        />
+                      </Box>
+                    ) : (
+                      <NoGamesFound message="No games found" />
+                    )
+                  ) : null}
+                </Box>
 
                 <Box
                   sx={{
