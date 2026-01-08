@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Button, Typography } from "@mui/material";
-import { Game, GameList, Order } from "./shared/types/types";
+import { Game, GameList } from "./shared/types/types";
 import GamesStats from "./GamesStats";
 import GameDialog from "./GameDialog";
 import ConfirmDialog from "./ConfirmDialog";
@@ -26,9 +26,6 @@ const GamesDashboard: React.FC = () => {
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
-
-  const [order, setOrder] = useState<Order>("asc");
-  const [orderBy, setOrderBy] = useState<keyof Game>("overall");
 
   // Fetch games from backend
   useEffect(() => {
@@ -85,19 +82,6 @@ const GamesDashboard: React.FC = () => {
     }
   };
 
-  const handleRequestSort = (property: keyof Game) => {
-    let newOrder: Order;
-
-    if (property === orderBy) {
-      newOrder = order === "asc" ? "desc" : "asc";
-    } else {
-      newOrder = property === "title" ? "desc" : "asc";
-    }
-
-    setOrder(newOrder);
-    setOrderBy(property);
-  };
-
   if (loading) return <Typography>Loading games...</Typography>;
   if (error) return <Typography color="error">{error}</Typography>;
 
@@ -121,10 +105,7 @@ const GamesDashboard: React.FC = () => {
       ) : (
         <GamesTable
           games={filteredGames}
-          order={order}
-          orderBy={orderBy}
-          onSort={handleRequestSort}
-          onRowClick={(game) => setSelectedGame(game)}
+          onRowClick={setSelectedGame}
           onDeleteClick={handleDeleteClick}
           deleting={deleting}
         />

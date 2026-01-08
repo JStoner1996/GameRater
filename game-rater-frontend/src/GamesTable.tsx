@@ -1,116 +1,90 @@
-// GameTable.tsx
-import React from "react";
+import React, { useState } from "react";
 import {
   Table,
   TableBody,
-  TableCell,
   TableContainer,
   TableHead,
   TableRow,
   Paper,
   Typography,
-  styled,
-  tableCellClasses,
 } from "@mui/material";
 import { Game, Order } from "./shared/types/types";
 import { stableSort, getComparator } from "./shared/helpers/Sorting";
 import { getCellColors } from "./shared/helpers/ColourScale";
 import { numericColumns } from "./shared/helpers/Columns";
+import { StyledHeaderCell, StyledBodyCell } from "./shared/helpers/StyledCells";
 
 type GamesTableProps = {
   games: Game[];
-  order: Order;
-  orderBy: keyof Game;
-  onSort?: (property: keyof Game) => void;
   onRowClick?: (game: Game) => void;
   onDeleteClick?: (id: number) => void;
   deleting?: boolean;
   showExtras?: boolean;
 };
 
-const StyledHeaderCell = styled(TableCell)(({ theme }) => ({
-  [`&.${tableCellClasses.head}`]: {
-    backgroundColor: theme.palette.common.black,
-    textAlign: "center",
-    cursor: "pointer",
-    userSelect: "none",
-    fontWeight: "bold",
-  },
-}));
-
-const StyledBodyCell = styled(TableCell)({
-  textAlign: "center",
-});
-
 const GamesTable: React.FC<GamesTableProps> = ({
   games,
-  order,
-  orderBy,
-  onSort,
   onRowClick,
   onDeleteClick,
-  deleting,
+  deleting = false,
   showExtras = true,
 }) => {
+  const [order, setOrder] = useState<Order>("desc");
+  const [orderBy, setOrderBy] = useState<keyof Game>("overall");
+
+  const handleRequestSort = (property: keyof Game) => {
+    let newOrder: Order;
+
+    if (property === orderBy) {
+      newOrder = order === "asc" ? "desc" : "asc";
+    } else {
+      // Title defaults ASC, everything else DESC
+      newOrder = property === "title" ? "desc" : "asc";
+    }
+
+    setOrder(newOrder);
+    setOrderBy(property);
+  };
+
+  const getHeaderColor = (col: keyof Game) => {
+    if (orderBy !== col) return "white";
+
+    // Title colors reversed
+    if (col === "title") {
+      return order === "asc" ? "red" : "green";
+    }
+
+    return order === "asc" ? "green" : "red";
+  };
+
   return (
-    <TableContainer
-      component={Paper}
-      sx={{ maxHeight: "75vh", overflowY: "auto", maxWidth: "100%" }}
-    >
-      <Table stickyHeader sx={{ borderCollapse: "collapse" }}>
+    <TableContainer component={Paper} sx={{ maxHeight: "75vh" }}>
+      <Table stickyHeader>
         <TableHead>
           <TableRow>
-            {/* Title column */}
             <StyledHeaderCell
-              onClick={() => onSort?.("title")}
-              sx={{
-                color:
-                  orderBy === "title"
-                    ? order === "asc"
-                      ? "red"
-                      : "green"
-                    : "white",
-              }}
+              onClick={() => handleRequestSort("title")}
+              sx={{ color: getHeaderColor("title") }}
             >
               Title
             </StyledHeaderCell>
 
-            {/* Numeric columns, skip stars if showExtras is false */}
-            {numericColumns.map((col) => {
-              if (!showExtras && col === "stars") return null;
+            {numericColumns.map((col) => (
+              <StyledHeaderCell
+                key={col}
+                onClick={() => handleRequestSort(col)}
+                sx={{ color: getHeaderColor(col) }}
+              >
+                {col === "artGraphics"
+                  ? "Art / Graphics"
+                  : col.charAt(0).toUpperCase() + col.slice(1)}
+              </StyledHeaderCell>
+            ))}
 
-              return (
-                <StyledHeaderCell
-                  key={col}
-                  onClick={() => onSort?.(col)}
-                  sx={{
-                    color:
-                      orderBy === col
-                        ? order === "asc"
-                          ? "green"
-                          : "red"
-                        : "white",
-                  }}
-                >
-                  {col === "artGraphics"
-                    ? "Art / Graphics"
-                    : col.charAt(0).toUpperCase() + col.slice(1)}
-                </StyledHeaderCell>
-              );
-            })}
-
-            {/* Year Completed */}
             {showExtras && (
               <StyledHeaderCell
-                onClick={() => onSort?.("yearCompleted")}
-                sx={{
-                  color:
-                    orderBy === "yearCompleted"
-                      ? order === "asc"
-                        ? "red"
-                        : "green"
-                      : "white",
-                }}
+                onClick={() => handleRequestSort("yearCompleted")}
+                sx={{ color: getHeaderColor("yearCompleted") }}
               >
                 Year Completed
               </StyledHeaderCell>
@@ -135,9 +109,6 @@ const GamesTable: React.FC<GamesTableProps> = ({
               </StyledBodyCell>
 
               {numericColumns.map((col) => {
-                // Skip "stars" if showExtras is false
-                if (!showExtras && col === "stars") return null;
-
                 const value = game[col] as number;
                 const { backgroundColor, textColor } = getCellColors(
                   value,

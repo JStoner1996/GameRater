@@ -1,4 +1,3 @@
-// GameDialog.tsx
 import React, { useState } from "react";
 import {
   Button,
@@ -191,12 +190,7 @@ const GameDialog: React.FC<GameDialogProps> = ({
 
                     {searchResults.length > 0 ? (
                       <Box maxWidth={800} width="100%" my={2}>
-                        <GamesTable
-                          games={searchResults}
-                          order="asc"
-                          orderBy="title"
-                          showExtras={false}
-                        />
+                        <GamesTable games={searchResults} showExtras={false} />
                       </Box>
                     ) : (
                       <NoGamesFound message="No games found" />
