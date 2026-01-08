@@ -246,12 +246,18 @@ const GameDialog: React.FC<GameDialogProps> = ({
 
                 <Box
                   sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
                     position: "absolute",
                     bottom: 16,
+                    left: 24,
                     right: 24,
                     zIndex: 10,
                   }}
                 >
+                  <Button variant="outlined" onClick={onClose}>
+                    Cancel
+                  </Button>
                   <Button type="submit" variant="contained">
                     Save
                   </Button>

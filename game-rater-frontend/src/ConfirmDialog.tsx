@@ -34,7 +34,7 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
         </Typography>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onCancel} disabled={loading}>
+        <Button variant="outlined" onClick={onCancel} disabled={loading}>
           Cancel
         </Button>
         <Button
