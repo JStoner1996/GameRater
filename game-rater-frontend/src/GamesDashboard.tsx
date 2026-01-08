@@ -7,9 +7,13 @@ import GamesStats from "./GamesStats";
 import GameDialog from "./GameDialog";
 import ConfirmDialog from "./ConfirmDialog";
 import GamesTable from "./GamesTable";
+import GameSearch from "./GameSearch";
+import NoGamesFound from "./NoGamesFound";
 
 const GamesDashboard: React.FC = () => {
   const [games, setGames] = useState<GameList>([]);
+  const [filteredGames, setFilteredGames] = useState<Game[]>([]);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -110,19 +114,21 @@ const GamesDashboard: React.FC = () => {
         Add Game
       </Button>
 
-      {/* Reusable table */}
-      <GamesTable
-        games={games}
-        order={order}
-        orderBy={orderBy}
-        onSort={handleRequestSort}
-        onRowClick={(g) => {
-          setSelectedGame(g);
-          setDialogOpen(true);
-        }}
-        onDeleteClick={handleDeleteClick}
-        deleting={deleting}
-      />
+      <GameSearch games={games} onResults={setFilteredGames} />
+
+      {filteredGames.length === 0 ? (
+        <NoGamesFound message="No games found" />
+      ) : (
+        <GamesTable
+          games={filteredGames}
+          order={order}
+          orderBy={orderBy}
+          onSort={handleRequestSort}
+          onRowClick={(game) => setSelectedGame(game)}
+          onDeleteClick={handleDeleteClick}
+          deleting={deleting}
+        />
+      )}
 
       <GamesStats games={games} />
 
