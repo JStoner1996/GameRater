@@ -7,6 +7,7 @@ import {
   TableRow,
   Paper,
   Typography,
+  Rating,
 } from "@mui/material";
 import { Game, Order } from "./shared/types/types";
 import { stableSort, getComparator } from "./shared/helpers/Sorting";
@@ -29,7 +30,7 @@ const GamesTable: React.FC<GamesTableProps> = ({
   deleting = false,
   showExtras = true,
 }) => {
-  const [order, setOrder] = useState<Order>("desc");
+  const [order, setOrder] = useState<Order>("asc");
   const [orderBy, setOrderBy] = useState<keyof Game>("overall");
 
   const handleRequestSort = (property: keyof Game) => {
@@ -69,7 +70,10 @@ const GamesTable: React.FC<GamesTableProps> = ({
               Title
             </StyledHeaderCell>
 
-            {numericColumns.map((col) => (
+            {(showExtras
+              ? numericColumns
+              : numericColumns.filter((col) => col !== "stars")
+            ).map((col) => (
               <StyledHeaderCell
                 key={col}
                 onClick={() => handleRequestSort(col)}
@@ -108,7 +112,10 @@ const GamesTable: React.FC<GamesTableProps> = ({
                 {game.title}
               </StyledBodyCell>
 
-              {numericColumns.map((col) => {
+              {(showExtras
+                ? numericColumns
+                : numericColumns.filter((col) => col !== "stars")
+              ).map((col) => {
                 const value = game[col] as number;
                 const { backgroundColor, textColor } = getCellColors(
                   value,
@@ -118,9 +125,21 @@ const GamesTable: React.FC<GamesTableProps> = ({
                 return (
                   <StyledBodyCell
                     key={col}
-                    sx={{ backgroundColor, color: textColor }}
+                    sx={{
+                      backgroundColor,
+                      color: col === "stars" ? "inherit" : textColor,
+                    }}
                   >
-                    {value}
+                    {col === "stars" ? (
+                      <Rating
+                        value={value}
+                        precision={1}
+                        readOnly
+                        size="small"
+                      />
+                    ) : (
+                      value
+                    )}
                   </StyledBodyCell>
                 );
               })}

@@ -133,11 +133,15 @@ const GameDialog: React.FC<GameDialogProps> = ({
             >
               <DialogContent sx={{ overflow: "hidden", flex: 1 }}>
                 {/* Game Fields */}
-                <Grid container rowSpacing={1} columnSpacing={{ xs: 1, sm: 2 }}>
+                <Grid
+                  container
+                  rowSpacing={2}
+                  columnSpacing={{ xs: 1, sm: 2, md: 3 }}
+                >
                   {Object.keys(values)
                     .filter((field) => field !== "id")
                     .map((field) => (
-                      <Grid key={field} size={6}>
+                      <Grid key={field} size={3}>
                         <TextField
                           name={field}
                           label={field.charAt(0).toUpperCase() + field.slice(1)}
@@ -189,7 +193,13 @@ const GameDialog: React.FC<GameDialogProps> = ({
                     />
 
                     {searchResults.length > 0 ? (
-                      <Box maxWidth={800} width="100%" my={2}>
+                      <Box
+                        maxWidth={850}
+                        maxHeight={175}
+                        width="100%"
+                        height="100%"
+                        my={2}
+                      >
                         <GamesTable games={searchResults} showExtras={false} />
                       </Box>
                     ) : (
